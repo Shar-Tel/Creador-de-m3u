@@ -9,9 +9,13 @@ import os
 import re
 import sys
 from collections import defaultdict
+import time
 
-# Solicitar directorio de trabajo
-directorio = input("Introduce el directorio sobre el que trabajar: ")
+# Obtener directorio de trabajo (como parámetro o por entrada)
+if len(sys.argv) > 1:
+    directorio = sys.argv[1]
+else:
+    directorio = input("Introduce el directorio sobre el que trabajar: ")
 
 # Validar que el directorio exista
 if not os.path.isdir(directorio):
@@ -40,6 +44,7 @@ for archivo in os.listdir(directorio):
             print(f"  Encontrado: {archivo} -> {nombre_base}")
 
 print(f"Se encontraron {len(juegos_multidisco)} juegos multidisco.\n")
+time.sleep(1)  # Pausa breve para mejorar la legibilidad de la salida
 
 # Fase 2: Procesar juegos multidisco (con 2 o más discos)
 print("Fase 2: Procesando juegos multidisco...")
@@ -77,11 +82,20 @@ for nombre_base, archivos in juegos_multidisco.items():
             archivos_ordenados.append(archivo)
         
         # Crear archivo .m3u con la lista de discos ordenados
-        ruta_m3u = os.path.join(directorio_juego, f"{nombre_base}.m3u")
+        ruta_m3u = os.path.join(directorio, f"{nombre_base}.m3u")
+        
+        # Verificar si el archivo .m3u ya existe
+        if os.path.exists(ruta_m3u):
+            respuesta = input(f"    El archivo '{nombre_base}.m3u' ya existe. ¿Deseas sobreescribirlo? (s/n): ").lower()
+            if respuesta.lower() != 's':
+                print(f"    Archivo .m3u no sobreescrito: {nombre_base}.m3u")
+                continue
+        
         with open(ruta_m3u, 'w', encoding='utf-8') as m3u:
             for archivo in archivos_ordenados:
-                m3u.write(f"{archivo}\n")
+                m3u.write(os.path.join(nombre_base, f"{archivo}\n"))
         print(f"    Archivo .m3u creado: {nombre_base}.m3u")
+        time.sleep(1)
         
         # Informar al usuario del procesamiento completado
         print(f"  ✓ Procesado: {nombre_base} ({len(archivos)} discos)")
