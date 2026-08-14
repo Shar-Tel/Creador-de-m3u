@@ -8,8 +8,8 @@ crea carpetas para cada juego y genera un archivo .m3u ordenado.
 import os
 import re
 import sys
-from collections import defaultdict
 import time
+from collections import defaultdict
 
 # Obtener directorio de trabajo (como parámetro o por entrada)
 if len(sys.argv) > 1:
@@ -51,6 +51,15 @@ print("Fase 2: Procesando juegos multidisco...")
 for nombre_base, archivos in juegos_multidisco.items():
     if len(archivos) > 1:  # Solo procesar si hay múltiples discos
         print(f"\n  Procesando: {nombre_base} ({len(archivos)} discos)")
+
+        ruta_m3u = os.path.join(directorio, f"{nombre_base}.m3u")
+        
+        # Verificar si el archivo .m3u ya existe y preguntar al usuario si desea procesar el juego o no
+        if os.path.exists(ruta_m3u):
+            respuesta = input(f"    El archivo '{nombre_base}.m3u' ya existe. ¿Deseas procesar este juego? (s/n): ").lower()
+            if respuesta.lower() != 's':
+                print(f"    Jego no procesado: {nombre_base}")
+                continue
         
         # Crear carpeta para el juego
         directorio_juego = os.path.join(directorio, nombre_base)
@@ -81,16 +90,7 @@ for nombre_base, archivos in juegos_multidisco.items():
             
             archivos_ordenados.append(archivo)
         
-        # Crear archivo .m3u con la lista de discos ordenados
-        ruta_m3u = os.path.join(directorio, f"{nombre_base}.m3u")
-        
-        # Verificar si el archivo .m3u ya existe
-        if os.path.exists(ruta_m3u):
-            respuesta = input(f"    El archivo '{nombre_base}.m3u' ya existe. ¿Deseas sobreescribirlo? (s/n): ").lower()
-            if respuesta.lower() != 's':
-                print(f"    Archivo .m3u no sobreescrito: {nombre_base}.m3u")
-                continue
-        
+        # Crear archivo .m3u con la lista de discos ordenados  
         with open(ruta_m3u, 'w', encoding='utf-8') as m3u:
             for archivo in archivos_ordenados:
                 m3u.write(os.path.join(nombre_base, f"{archivo}\n"))
