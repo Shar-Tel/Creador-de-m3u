@@ -10,6 +10,8 @@ This script searches for files with the pattern (disc N), groups them by base na
 creates folders for each game and generates an ordered .m3u file.
 """
 
+__version__ = "1.0.0"
+
 import locale
 import os
 import re
@@ -89,52 +91,66 @@ if not os.path.isdir(directorio):
     print(t('dir_no_existe'))
     sys.exit()
 
+log_path = os.path.join(directorio, 'creaM3u.log')
+
+# Crear/limpiar el archivo de log para registrar todos los mensajes
+if os.path.exists(log_path):
+    os.remove(log_path)
+
+
+def registrar_mensaje(mensaje):
+    """Muestra el mensaje por consola y lo guarda en el archivo de log."""
+    print(mensaje)
+    with open(log_path, 'a', encoding='utf-8') as archivo_log:
+        archivo_log.write(f"{mensaje}\n")
+
 # Diccionario para agrupar archivos multidisco por nombre base del juego
 # Estructura: {nombre_juego: [archivo1, archivo2, ...]}
 juegos_multidisco = defaultdict(list)
 
 # Fase 1: Escanear archivos y agrupar por juego multidisco
-print(t('fase1'))
+registrar_mensaje(t('fase1'))
 for archivo in os.listdir(directorio):
     ruta_completa = os.path.join(directorio, archivo)
     
     # Procesar solo archivos (no directorios)
     if os.path.isfile(ruta_completa):
-        # Buscar patrón "(disc N)" en el nombre del archivo
-        match = re.search(r'(.*?)\s*\(disc\s*(\d+)\)', archivo, re.IGNORECASE)
+        # Buscar patrón "(disc N)" o "[disc N]" en el nombre del archivo
+        match = re.search(r'(.*?)\s*[\(\[]disc\s*(\d+)[\)\]]', archivo, re.IGNORECASE)
         
         if match:
             # Extraer nombre base del juego (todo antes de "disc N")
             nombre_base = match.group(1).strip()
             # Almacenar archivo en lista del juego correspondiente
             juegos_multidisco[nombre_base].append(archivo)
-            print(f"  {t('encontrado')}: {archivo} -> {nombre_base}")
+            registrar_mensaje(f"  {t('encontrado')}: {archivo} -> {nombre_base}")
 
-print(f"{t('encontrados')} {len(juegos_multidisco)} {t('juegos_multi')}.\n")
+registrar_mensaje(f"{t('encontrados')} {len(juegos_multidisco)} {t('juegos_multi')}.\n")
 time.sleep(1)  # Pausa breve para mejorar la legibilidad de la salida
 
 # Fase 2: Procesar juegos multidisco (con 2 o más discos)
-print(t('fase2'))
+registrar_mensaje(t('fase2'))
 for nombre_base, archivos in juegos_multidisco.items():
     if len(archivos) > 1:  # Solo procesar si hay múltiples discos
-        print(f"\n  {t('procesando')}: {nombre_base} ({len(archivos)} {t('discos')})")
+        registrar_mensaje(f"\n  {t('procesando')}: {nombre_base} ({len(archivos)} {t('discos')})")
 
         ruta_m3u = os.path.join(directorio, f"{nombre_base}.m3u")
         
         # Verificar si el archivo .m3u ya existe y preguntar al usuario si desea procesar el juego o no
         if os.path.exists(ruta_m3u):
             respuesta = input(f"    {t('archivo_existe')} '{nombre_base}.m3u' {t('ya_existe')} (s/n): ").lower()
+            registrar_mensaje(f"    {t('archivo_existe')} '{nombre_base}.m3u' {t('ya_existe')} (s/n): {respuesta}")
             if respuesta.lower() != 's' and respuesta.lower() != 'y':
-                print(f"    {t('juego_no_procesado')}: {nombre_base}")
+                registrar_mensaje(f"    {t('juego_no_procesado')}: {nombre_base}")
                 continue
         
         # Crear carpeta para el juego
         directorio_juego = os.path.join(directorio, nombre_base)
         if not os.path.exists(directorio_juego):
             os.makedirs(directorio_juego)
-            print(f"    {t('carpeta_creada')}: {nombre_base}")
+            registrar_mensaje(f"    {t('carpeta_creada')}: {nombre_base}")
         else:
-            print(f"    {t('carpeta_existe')}: {nombre_base}")
+            registrar_mensaje(f"    {t('carpeta_existe')}: {nombre_base}")
         
         # Función auxiliar para extraer número de disco del nombre de archivo
         def get_disc_number(x):
@@ -151,9 +167,9 @@ for nombre_base, archivos in juegos_multidisco.items():
             # Mover archivo si no existe ya en destino
             if not os.path.exists(ruta_destino):
                 os.rename(ruta_origen, ruta_destino)
-                print(f"    {t('movido')}: {archivo}")
+                registrar_mensaje(f"    {t('movido')}: {archivo}")
             else:
-                print(f"    {t('ya_existe_archivo')}: {archivo}")
+                registrar_mensaje(f"    {t('ya_existe_archivo')}: {archivo}")
             
             archivos_ordenados.append(archivo)
         
@@ -161,10 +177,10 @@ for nombre_base, archivos in juegos_multidisco.items():
         with open(ruta_m3u, 'w', encoding='utf-8') as m3u:
             for archivo in archivos_ordenados:
                 m3u.write(os.path.join(nombre_base, f"{archivo}\n"))
-        print(f"    {t('m3u_creado')}: {nombre_base}.m3u")
+        registrar_mensaje(f"    {t('m3u_creado')}: {nombre_base}.m3u")
         time.sleep(1)
         
         # Informar al usuario del procesamiento completado
-        print(f"  ✓ {t('procesado')}: {nombre_base} ({len(archivos)} {t('discos')})")
+        registrar_mensaje(f"  ✓ {t('procesado')}: {nombre_base} ({len(archivos)} {t('discos')})")
 
-print(f"\n{t('completado')}")
+registrar_mensaje(f"\n{t('completado')}")
