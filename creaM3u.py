@@ -1,16 +1,16 @@
 """
 Script para organizar juegos multidisco en carpetas y crear listas de reproducción .m3u.
 
-Este script busca archivos con patrón (disc N) o [disc N], los agrupa por nombre base,
+Este script busca archivos con patrones (disc N), [disc N], CD N o CDN, los agrupa por nombre base,
 crea carpetas para cada juego y genera un archivo .m3u ordenado.
 
 Script to organize multi-disc games in folders and create .m3u playlists.
 
-This script searches for files with the pattern (disc N) or [disc N], groups them by base name,
+This script searches for files with patterns (disc N), [disc N], CD N or CDN, groups them by base name,
 creates folders for each game and generates an ordered .m3u file.
 """
 
-__version__ = "1.0.0"
+__version__ = "1.0.1"
 
 import locale
 import os
@@ -108,6 +108,46 @@ def registrar_mensaje(mensaje):
 # Estructura: {nombre_juego: [archivo1, archivo2, ...]}
 juegos_multidisco = defaultdict(list)
 
+
+def extraer_nombre_y_numero_disco(archivo):
+    """Devuelve (nombre_base, numero_disco) para patrones tipo (disc N), [disc N] o CD1/CD2."""
+    patrones = [
+        # Captura nombres como "Game (disc 1)" o "Game [disc 2]"
+        # (.*?) - Captura cualquier carácter (nombre base, no codicioso)
+        # \s* - Espacios opcionales
+        # [\(\[] - Paréntesis o corchete de apertura
+        # disc\s* - Palabra "disc" seguida de espacios opcionales
+        # (\d+) - Captura uno o más dígitos (número de disco)
+        # [\)\]] - Paréntesis o corchete de cierre
+        r'(.*?)\s*[\(\[]disc\s*(\d+)[\)\]]',
+        
+        # Captura nombres como "Game CD 1" (con espacio entre CD y número)
+        # (.*?) - Captura cualquier carácter (nombre base, no codicioso)
+        # \s* - Espacios opcionales
+        # CD\s* - Literal "CD" seguido de espacios opcionales
+        # (\d+) - Captura uno o más dígitos (número de disco)
+        # \b - Límite de palabra (asegura que no hay caracteres inmediatamente después)
+        r'(.*?)\s*CD\s*(\d+)\b',
+        
+        # Captura nombres como "GameCD1" (sin espacio entre CD y número)
+        # (.*?) - Captura cualquier carácter (nombre base, no codicioso)
+        # \s* - Espacios opcionales
+        # CD - Literal "CD"
+        # (\d+) - Captura uno o más dígitos (número de disco)
+        # \b - Límite de palabra
+        r'(.*?)\s*CD(\d+)\b',
+    ]
+
+    for patron in patrones:
+        match = re.search(patron, archivo, re.IGNORECASE)
+        if match:
+            nombre_base = match.group(1).strip()
+            numero = next(valor for valor in match.groups()[1:] if valor is not None)
+            return nombre_base, int(numero)
+
+    return None, None
+
+
 # Fase 1: Escanear archivos y agrupar por juego multidisco
 registrar_mensaje(t('fase1'))
 for archivo in os.listdir(directorio):
@@ -115,12 +155,9 @@ for archivo in os.listdir(directorio):
     
     # Procesar solo archivos (no directorios)
     if os.path.isfile(ruta_completa):
-        # Buscar patrón "(disc N)" o "[disc N]" en el nombre del archivo
-        match = re.search(r'(.*?)\s*[\(\[]disc\s*(\d+)[\)\]]', archivo, re.IGNORECASE)
+        nombre_base, _ = extraer_nombre_y_numero_disco(archivo)
         
-        if match:
-            # Extraer nombre base del juego (todo antes de "disc N")
-            nombre_base = match.group(1).strip()
+        if nombre_base:
             # Almacenar archivo en lista del juego correspondiente
             juegos_multidisco[nombre_base].append(archivo)
             registrar_mensaje(f"  {t('encontrado')}: {archivo} -> {nombre_base}")
@@ -155,8 +192,8 @@ for nombre_base, archivos in juegos_multidisco.items():
         # Función auxiliar para extraer número de disco del nombre de archivo
         def get_disc_number(x):
             """Extrae el número de disco del nombre del archivo para ordenamiento."""
-            match = re.search(r'\(disc\s*(\d+)\)', x, re.IGNORECASE)
-            return int(match.group(1)) if match else 0
+            _, numero = extraer_nombre_y_numero_disco(x)
+            return int(numero) if numero is not None else 0
         
         # Ordenar archivos por número de disco y moverlos a la carpeta del juego
         archivos_ordenados = []
