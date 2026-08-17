@@ -1,12 +1,12 @@
 """
 Script para organizar juegos multidisco en carpetas y crear listas de reproducción .m3u.
 
-Este script busca archivos con patrón (disc N), los agrupa por nombre base,
+Este script busca archivos con patrón (disc N) o [disc N], los agrupa por nombre base,
 crea carpetas para cada juego y genera un archivo .m3u ordenado.
 
 Script to organize multi-disc games in folders and create .m3u playlists.
 
-This script searches for files with the pattern (disc N), groups them by base name,
+This script searches for files with the pattern (disc N) or [disc N], groups them by base name,
 creates folders for each game and generates an ordered .m3u file.
 """
 
