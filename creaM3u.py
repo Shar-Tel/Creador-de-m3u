@@ -1,16 +1,18 @@
 """
 Script para organizar juegos multidisco en carpetas y crear listas de reproducción .m3u.
 
-Este script busca archivos con patrones (disc N), [disc N], CD N o CDN, los agrupa por nombre base,
+Este script busca archivos con patrones (disc N), [disc N], (Disk N of M), [Disk N of M], CD N o CDN,
+los agrupa por nombre base,
 crea carpetas para cada juego y genera un archivo .m3u ordenado.
 
 Script to organize multi-disc games in folders and create .m3u playlists.
 
-This script searches for files with patterns (disc N), [disc N], CD N or CDN, groups them by base name,
+This script searches for files with patterns (disc N), [disc N], (Disk N of M), [Disk N of M], CD N or CDN,
+groups them by base name,
 creates folders for each game and generates an ordered .m3u file.
 """
 
-__version__ = "1.0.1"
+__version__ = "1.0.2"
 
 import locale
 import os
@@ -136,6 +138,16 @@ def extraer_nombre_y_numero_disco(archivo):
         # (\d+) - Captura uno o más dígitos (número de disco)
         # \b - Límite de palabra
         r'(.*?)\s*CD(\d+)\b',
+
+        # Captura nombres como "Game (Disk 1 of 6)" o "Game (Disk 2 of 6)"
+        # (.*?) - Captura cualquier carácter (nombre base, no codicioso)
+        # \s* - Espacios opcionales
+        # [\(\[] - Paréntesis o corchete de apertura
+        # Disk\s* - Palabra "Disk" seguida de espacios opcionales   
+        # (\d+) - Captura uno o más dígitos (número de disco)
+        # \s*of\s*\d+ - Coincide con "of" seguido de un número (total de discos)
+        # [\)\]] - Paréntesis o corchete de cierre
+        r'(.*?)\s*[\(\[]Disk\s*(\d+)\s*of\s*\d+[\)\]]',
     ]
 
     for patron in patrones:
