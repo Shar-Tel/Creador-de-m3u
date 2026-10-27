@@ -27,6 +27,18 @@ class ExtraerNombreYNumeroDiscoTests(unittest.TestCase):
         casos = (
             ("Final Fantasy VII (disc 1).bin", ("Final Fantasy VII", 1)),
             ("Final Fantasy VII (DISC 2).bin", ("Final Fantasy VII", 2)),
+            
+        )
+
+        for archivo, esperado in casos:
+            with self.subTest(archivo=archivo):
+                self.assertEqual(extraer_nombre_y_numero_disco(archivo), esperado)
+
+    def test_extrae_discos_sin_parentesis(self):
+        casos = (
+            ("Rocket_Ranger_Auto_Takeoff_Disk1.adf", ("Rocket_Ranger_Auto_Takeoff", 1)),
+            ("Rocket_Ranger_Auto_Takeoff_Disk2.adf", ("Rocket_Ranger_Auto_Takeoff", 2)),
+            
         )
 
         for archivo, esperado in casos:

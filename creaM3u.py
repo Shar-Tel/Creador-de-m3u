@@ -12,7 +12,7 @@ groups them by base name,
 creates folders for each game and generates an ordered .m3u file.
 """
 
-__version__ = "1.0.2"
+__version__ = "1.0.3"
 
 import locale
 import os
@@ -112,7 +112,7 @@ juegos_multidisco = defaultdict(list)
 
 
 def extraer_nombre_y_numero_disco(archivo):
-    """Devuelve (nombre_base, numero_disco) para patrones tipo (disc N), [disc N] o CD1/CD2."""
+    """Devuelve (nombre_base, numero_disco) para patrones tipo (disc N), DiskN o CD1/CD2."""
     patrones = [
         # Captura nombres como "Game (disc 1)" o "Game [disc 2]"
         # (.*?) - Captura cualquier carácter (nombre base, no codicioso)
@@ -148,6 +148,10 @@ def extraer_nombre_y_numero_disco(archivo):
         # \s*of\s*\d+ - Coincide con "of" seguido de un número (total de discos)
         # [\)\]] - Paréntesis o corchete de cierre
         r'(.*?)\s*[\(\[]Disk\s*(\d+)\s*of\s*\d+[\)\]]',
+
+        # Captura nombres como "Game_Disk1" o "Game Disk 2"
+        # El separador antes de Disk/Disc y después del número es opcional.
+        r'(.*?)\s*[_-]?(?:Disk|Disc)\s*(\d+)(?=$|[\s._-])',
     ]
 
     for patron in patrones:
