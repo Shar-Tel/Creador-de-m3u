@@ -25,7 +25,7 @@ from collections import defaultdict
 # Detecta el idioma del sistema operativo y devuelve True si es español
 def detecta_idioma_español():
     """Detecta si el idioma del sistema operativo es español."""
-    idioma_sistema = locale.getdefaultlocale()[0]
+    idioma_sistema = locale.getlocale()[0]
     return idioma_sistema.startswith('es') if idioma_sistema else False
 
 es_español = detecta_idioma_español()
